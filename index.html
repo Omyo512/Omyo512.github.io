@@ -1,18 +1,100 @@
-<script>
-  async function searchProject() {
-    const houseNo = document.getElementById("houseNo").value.trim();
-    const phone = document.getElementById("phone").value.trim();
-    const warrantyNo = document.getElementById("warrantyNo").value.trim();
-
-    const url = `https://script.google.com/macros/s/AKfycbysgB1fcFLmBRbXon5ITbuD4BM8gaXUsgVw_ZYkYemBRCWJOjaLxGh9zLf9ahpCXvB2ag/exec?houseNo=${houseNo}&phone=${phone}&warrantyNo=${warrantyNo}`;
-
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (data.status === "success") {
-      // Show project details
-    } else {
-      // Show "no match found"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OMYO Project Lookup</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f8f9fa;
+      text-align: center;
     }
-  }
-</script>
+    h2 {
+      margin-bottom: 10px;
+    }
+    input {
+      margin: 8px;
+      padding: 10px;
+      width: 80%;
+      max-width: 400px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background-color: #0077cc;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005fa3;
+    }
+    #result {
+      margin-top: 20px;
+      padding: 20px;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .label {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>🔍 Project Lookup | البحث عن المشروع</h2>
+
+  <input type="text" id="phone" placeholder="📞 Phone Number / رقم الجوال">
+  <br>
+  <input type="text" id="houseNo" placeholder="🏠 House No / رقم المنزل">
+  <br>
+  <input type="text" id="warrantyNo" placeholder="📄 Warranty No / رقم الضمان">
+  <br>
+  <button onclick="searchProject()">Search / بحث</button>
+
+  <div id="result"></div>
+
+  <script>
+    async function searchProject() {
+      const phone = document.getElementById('phone').value.trim();
+      const houseNo = document.getElementById('houseNo').value.trim();
+      const warrantyNo = document.getElementById('warrantyNo').value.trim();
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = '🔄 Searching... / جاري البحث...';
+
+      const url = `https://script.google.com/macros/s/AKfycbysgB1fcFLmBRbXon5ITbuD4BM8gaXUsgVw_ZYkYemBRCWJOjaLxGh9zLf9ahpCXvB2ag/exec?phone=${phone}&houseNo=${houseNo}&warrantyNo=${warrantyNo}`;
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.status === 'success') {
+          const project = data.project;
+          resultDiv.innerHTML = `
+            <h3>✅ Project Found / تم العثور على المشروع</h3>
+            <p><span class="label">Client Name / اسم العميل:</span> ${project.name}</p>
+            <p><span class="label">Phone / الجوال:</span> ${project.phone}</p>
+            <p><span class="label">House No / رقم المنزل:</span> ${project.houseNo}</p>
+            <p><span class="label">Warranty No / شهادة الضمان:</span> ${project.warrantyNo}</p>
+            <p><span class="label">Service / الخدمة:</span> ${project.service}</p>
+            <p><a href="https://wa.me/974${project.phone}?text=Hi%20OMYO%2C%20regarding%20project%20${project.warrantyNo}" target="_blank">
+              📲 Contact Support / تواصل مع الدعم عبر واتساب
+            </a></p>
+          `;
+        } else {
+          resultDiv.innerHTML = `❌ No matching data found. Please check your inputs.<br>❌ لا توجد بيانات مطابقة، الرجاء التحقق من المدخلات.`;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `⚠️ Error contacting the server. Try again later.<br>⚠️ حدث خطأ في الاتصال بالخادم. حاول مرة أخرى.`;
+      }
+    }
+  </script>
+
+</body>
+</html>
