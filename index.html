@@ -1,0 +1,99 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>OMYO ChatBot</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+    .chat-box {
+      background: white;
+      border-radius: 10px;
+      padding: 15px;
+      max-width: 500px;
+      margin: auto;
+      box-shadow: 0 0 10px #ccc;
+    }
+    .message {
+      padding: 10px;
+      border-radius: 10px;
+      margin: 5px 0;
+    }
+    .user {
+      background: #daf1ff;
+      text-align: right;
+    }
+    .bot {
+      background: #eee;
+      text-align: left;
+    }
+    input, button {
+      padding: 10px;
+      width: 100%;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-box" dir="auto">
+    <div id="chat"></div>
+    <input id="input" type="text" placeholder="اكتب رقم الجوال، البيت أو الضمان أو اسأل سؤالًا... / Enter phone, house no, warranty no or ask a question...">
+    <button onclick="sendMessage()">Send / إرسال</button>
+  </div>
+
+  <script>
+    let userInfo = { phone: "", houseNo: "", warrantyNo: "", verified: false };
+
+    function appendMessage(text, type) {
+      const msg = document.createElement("div");
+      msg.className = `message ${type}`;
+      msg.innerText = text;
+      document.getElementById("chat").appendChild(msg);
+    }
+
+    function detectLanguage(text) {
+      const arabic = /[\u0600-\u06FF]/;
+      return arabic.test(text) ? 'ar' : 'en';
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById("input");
+      const text = input.value.trim();
+      if (!text) return;
+
+      appendMessage(text, "user");
+      input.value = "";
+
+      let lang = detectLanguage(text);
+      let response = { ar: "", en: "" };
+
+      if (!userInfo.verified) {
+        if (/^\d{8,}$/.test(text)) userInfo.phone = text;
+        else if (/^H/i.test(text)) userInfo.houseNo = text;
+        else if (/^W/i.test(text)) userInfo.warrantyNo = text;
+        else userInfo.question = text;
+      } else {
+        userInfo.question = text;
+      }
+
+      const res = await fetch("https://script.google.com/macros/s/AKfycbysgB1fcFLmBRbXon5ITbuD4BM8gaXUsgVw_ZYkYemBRCWJOjaLxGh9zLf9ahpCXvB2ag/exec", {
+        method: "POST",
+        contentType: "application/json",
+        body: JSON.stringify(userInfo)
+      });
+
+      const data = await res.json();
+      response = data.response;
+
+      appendMessage(response[lang] || response.en, "bot");
+
+      if (response.en.includes("verified")) userInfo.verified = true;
+    }
+  </script>
+</body>
+</html>
